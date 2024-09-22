@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "106999503836",
+    "firebase_url": "https://grocery-shop-prices-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "grocery-shop-prices",
+    "storage_bucket": "grocery-shop-prices.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:106999503836:android:f76b5f7612c60d85a50d19",
+        "android_client_info": {
+          "package_name": "com.example.groceryshopprices"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "106999503836-53pjm40o9f7mnk60ttk65k6q5s3vuotm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.groceryshopprices",
+            "certificate_hash": "e066292f1b09e1d9d7f85de5267e1fa9acca564d"
+          }
+        },
+        {
+          "client_id": "106999503836-ucr44hkcrt67mmg5e8fpfdutkcjki93o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnw3wH6HM29kr5fu7uuKVMKkVGhh8E1Uc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "106999503836-ucr44hkcrt67mmg5e8fpfdutkcjki93o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
