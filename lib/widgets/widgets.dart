@@ -5,6 +5,7 @@
 export 'appbar.dart';
 export 'appdrawer.dart';
 export 'ButtonForBounce.dart';
+export 'closebtn.dart';
 export 'lable.dart';
 export 'profile_icon.dart';
 export 'TextFieldBoxWidget.dart';

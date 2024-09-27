@@ -1,8 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-// ignore_for_file: use_build_context_synchronously
-
-import 'package:flutter/material.dart';
-
 import 'package:groceryshopprices/lib.dart';
 
 class AppDrawer extends StatelessWidget {

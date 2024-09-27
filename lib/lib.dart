@@ -18,13 +18,12 @@ export 'package:firebase_auth/firebase_auth.dart';
 export 'package:flutter/material.dart';
 export 'package:flutter/foundation.dart';
 export 'constants/constants.dart';
-export 'models/models.dart';
-export 'providers/providers.dart';
-
+export 'dialogs/dialogs.dart';
+export 'extensions/extensions.dart';
 export 'handler/handler.dart';
 export 'methods/methods.dart';
-export 'extensions/extensions.dart';
-export 'widgets/widgets.dart';
-
+export 'models/models.dart';
 export 'pages/pages.dart';
+export 'providers/providers.dart';
+export 'widgets/widgets.dart';
 export 'main.dart';

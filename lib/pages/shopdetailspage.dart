@@ -137,48 +137,51 @@ class ItemBasicCardFromId extends StatelessWidget {
                 if (item == null) {
                   return const SizedBox();
                 }
-                return Card(
-                  shape: 12.roundedCardShape(),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      if (item!.imageLinks.isNotEmpty)
-                        MultiSourceImageWidget(
-                          img: item!.imageLinks.first,
-                          size: w * 0.3,
-                          roundRad: 12,
-                          fit: BoxFit.cover,
+                return BouncingBtn.fast(
+                  onTap: () {
+                    if (item != null && itemDynamic != null) {
+                      showItemDetailDialog(context,
+                          item: item!, itemMap: itemMap);
+                    }
+                  },
+                  child: Card(
+                    shape: 12.roundedCardShape(),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        if (item!.imageLinks.isNotEmpty)
+                          MultiSourceImageWidget(
+                            img: item!.imageLinks.first,
+                            size: w * 0.3,
+                            roundRad: 12,
+                            fit: BoxFit.cover,
+                          ),
+                        TextStyWidget.black(
+                          text: item!.name,
+                          fontsize: w * 0.04,
+                          fontweight: FontWeight.w700,
                         ),
-                      TextStyWidget.black(
-                        text: item!.name,
-                        fontsize: w * 0.04,
-                        fontweight: FontWeight.w700,
-                      ),
-                      if (itemDynamic != null &&
-                          itemDynamic!.sellingPrices.isNotEmpty)
-                        Builder(builder: (context) {
-                          PriceModel priceModel =
-                              itemDynamic.sellingPrices.first;
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              TextStyWidget.black(
-                                  fontweight: FontWeight.w800,
-                                  fontsize: w * 0.05,
-                                  text:
-                                      priceModel.price.toString() + " $rupee "),
-                              TextStyWidget.black(
-                                  fontweight: FontWeight.w500,
-                                  fontsize: w * 0.04,
-                                  text: "(" +
-                                      priceModel.qty.toString() +
-                                      " " +
-                                      priceModel.measureType.name +
-                                      ")"),
-                            ],
-                          );
-                        })
-                    ],
+                        if (itemDynamic != null &&
+                            itemDynamic!.sellingPrices.isNotEmpty)
+                          Builder(builder: (context) {
+                            PriceModel priceModel =
+                                itemDynamic.sellingPrices.first;
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                TextStyWidget.black(
+                                    fontweight: FontWeight.w800,
+                                    fontsize: w * 0.05,
+                                    text: "${priceModel.price} $rupee "),
+                                TextStyWidget.black(
+                                    fontweight: FontWeight.w500,
+                                    fontsize: w * 0.04,
+                                    text: "(${priceModel.qty} ${priceModel.measureType.name})"),
+                              ],
+                            );
+                          })
+                      ],
+                    ),
                   ),
                 );
               });
