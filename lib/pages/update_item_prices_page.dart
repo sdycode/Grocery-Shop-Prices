@@ -1,16 +1,20 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:wheel_chooser/wheel_chooser.dart';
 
 import 'package:groceryshopprices/lib.dart';
-import 'package:wheel_chooser/wheel_chooser.dart';
 
 class UpdateItemPricesPage extends StatefulWidget {
   final Item item;
   final Map<String, ItemDynamic> itemMap;
+  final ShopModel shop;
   const UpdateItemPricesPage({
     Key? key,
     required this.item,
     required this.itemMap,
+    required this.shop,
   }) : super(key: key);
 
   @override
@@ -28,7 +32,7 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
   ItemDynamic? itemDynamicForUpdate;
   List<String> datesKeys = [];
   List<TextEditingController> priceControllers = [];
-
+  DateTime? dateForEditUpdate;
   List<TextEditingController> qtyControllers = [];
   MeasureType? selectedMeasureType;
   StateSetter? textState;
@@ -38,6 +42,7 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
     }
   }
 
+  File? image;
   @override
   void initState() {
     // TODO: implement initState
@@ -78,33 +83,135 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
   updateControllersBasedOnDate(String dateString) {
     if (itemMap.containsKey(dateString)) {
       itemDynamicForUpdate = itemMap[currentDateKey!]!;
+
       if (itemDynamicForUpdate != null) {
+        measureTypes = itemDynamicForUpdate!.sellingPrices
+            .map((e) => e.measureType)
+            .toList();
         for (var i = 0; i < itemDynamic!.sellingPrices.length; i++) {
-          priceControllers[i].text =
-              itemDynamic!.sellingPrices[i].price.toString();
-          qtyControllers[i].text = itemDynamic!.sellingPrices[i].qty.toString();
+          MeasureType measureType = itemDynamic!.sellingPrices[i].measureType;
+          int mInd = fullMeasureTypes.indexOf(measureType);
+          if (mInd >= 0) {
+            priceControllers[mInd].text =
+                itemDynamic!.sellingPrices[i].price.toString();
+            qtyControllers[mInd].text =
+                itemDynamic!.sellingPrices[i].qty.toString();
+          }
         }
       }
     }
   }
 
+  bool showImgUploadloading = false;
   @override
   Widget build(BuildContext context) {
+    // printLog("imglinks ${item.imageLinks}");
+    // item.imageLinks.forEach((e) {
+    //   printLog(e);
+    // });
     return Scaffold(
       appBar: appBarWidget(context: context, text: item.name),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           (w.horizontalSpacing()),
+          // "delellet".elButnStyle(onTap: () async {
+          //   printLog("link full ${item.imageLinks.first}");
+          //   deleteImageFromFirebaseStorage(item.imageLinks.first);
+          // }),
           if (item.imageLinks.isNotEmpty)
-            CachedImageWidget(
-              image: item.imageLinks.first,
-              width: w,
-              height: w * 0.65,
-              radius: 20,
-              fit: BoxFit.cover,
-              padding: 0,
-            ),
+            StatefulBuilder(builder: (context, state) {
+              return Column(
+                children: [
+                  Stack(
+                    children: [
+                      (image != null)
+                          ? Image.file(
+                              image!,
+                              width: w,
+                              height: w * 0.65,
+                              fit: BoxFit.cover,
+                            ).clipRounded(radius: 20)
+                          : CachedImageWidget(
+                              image: item.imageLinks.first,
+                              width: w,
+                              height: w * 0.65,
+                              radius: 20,
+                              fit: BoxFit.cover,
+                              padding: 0,
+                            ),
+                      if (showImgUploadloading)
+                        CircularProgressIndicator.adaptive()
+                            .placeInContainer(w, w * 0.65),
+                      if (amIPartOfThisShop(widget.shop))
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child: IconButton(
+                              onPressed: () async {
+                                await openSheet(
+                                  context,
+                                  (value) {
+                                    image = value;
+                                    state(() {
+                                      showImgUploadloading = false;
+                                    });
+                                    // state(() {
+                                    //   loadingForImg = false;
+                                    // });
+                                    // setState(() {});
+                                  },
+                                  () {
+                                    state(() {
+                                      showImgUploadloading = true;
+                                    });
+                                    // printLog("update called $loadingForImg");
+                                    // state(() {
+                                    //   loadingForImg = true;
+                                    // });
+                                  },
+                                );
+                              },
+                              icon: Container(
+                                  decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle),
+                                  child: Icon(Icons.edit).applyPadding())),
+                        )
+                    ],
+                  ).placeInContainer(w, w * 0.65),
+                  if (image != null && amIPartOfThisShop(widget.shop))
+                    "Update Photo".elButnStyle(
+                        sidePad: 0,
+                        vertPad: 16,
+                        onTap: () async {
+                          if (await noInternetAvailable()) {
+                            showNoInternetDialog(context);
+                            return;
+                          }
+                          state(() {
+                            showImgUploadloading = true;
+                          });
+                          String link = await uploadDocument(image!);
+                          if (link.isNotEmpty) {
+                            List<String> oldLinks = List.from(item.imageLinks);
+                            item.imageLinks.clear();
+                            item.imageLinks.add(link);
+
+                            image = null;
+                            state(() {
+                              showImgUploadloading = false;
+                            });
+                            await updateStaticItem(item);
+                            oldLinks!.forEach((dlink) {
+                              deleteImageFromFirebaseStorage(dlink);
+                            });
+                          }
+                        },
+                        loading: showImgUploadloading,
+                        ignore: image == null)
+                ],
+              );
+            }),
           gap10,
           if (item.altenateNames.isNotEmpty)
             Wrap(
@@ -146,151 +253,167 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
                     ))
                 .toList(),
             onValueChanged: (s) {
-              printLog("date ${s}");
+              int? i = int.tryParse(s.toString());
+              if (i != null) {
+                ItemDynamic? itd = itemMap[datesKeys[i]];
+                if (itd != null) {
+                  itemDynamic = itd;
+                  setState(() {});
+                }
+              }
+              // printLog("date in  ${s}");
             },
           ).placeInContainer(w, w * 0.05 + 16).applyVerticalPadding(),
           gap10,
-          "Select Date For New Rates".elButnStyle(
-            onTap: () async {
-              DateTime? date = await displayAndSelectDate(context);
-              if (date != null) {
-                
-                setItemDyanmicForUpdate(date);
-                updateControllersBasedOnDate(date.toDayMonthYearUnderscore());
-                
-                setState(() {
-                  showEditControllers = true;
-                });
-              }
-            },
-          ),
-          StatefulBuilder(builder: (c, doTextState) {
-            textState = doTextState;
-            return Column(
-              children: [
-                // if(itemDynamic!= null && itemDynamic!.sellingPrices)
-                if (showEditControllers)
-                  MeasureTypesListWidget(
-                    measureTypes: measureTypes,
-                    onTap: (e) {
-                      if (measureTypes.contains(e)) {
-                        measureTypes.remove(e);
-                        if (selectedMeasureType == e) {
-                          if (measureTypes.isNotEmpty) {
-                            selectedMeasureType = measureTypes.first;
-                          } else {
-                            selectedMeasureType = null;
-                          }
-                        }
-                      } else {
-                        measureTypes.add(e);
-                        selectedMeasureType = e;
-                      }
-                      updateTextState();
-                    },
-                  ),
-                if (showEditControllers && measureTypes.isNotEmpty)
-                  Row(children: [
-                    lableAboveTextField("Selling Price*  (₹)")
-                        .alignLeft()
-                        .expandIfNeeded(),
-                    20.horizontalSpacing(),
-                    lableAboveTextField("Qty").alignLeft().expandIfNeeded(),
-                  ]).applySymmetricPadding(horizontal: 8, vertical: 12),
-                if (showEditControllers && measureTypes.isNotEmpty)
-                  ...List.generate(fullMeasureTypes.length, (i) {
-                    MeasureType measureType = fullMeasureTypes[i];
-                    if (!measureTypes.contains(measureType)) {
-                      return SizedBox();
-                    }
-                    return Column(
-                      children: [
-                        TextStyWidget.primary(
-                          text: measureType.name,
-                          fontweight: FontWeight.w800,
-                        ).alignLeft().applyHorizontalPadding(horizontal: 8),
-                        Row(
-                          children: [
-                            TextFieldBoxWidget.onlyDigit(
-                              bottomPad: 2,
-                              inputFormatters: [intFormatters],
-                              normalBorderColor: transperent,
-                              withPrimaryBorder: false,
-                              controller: priceControllers[i],
-                              onCleared: () {
-                                priceControllers[i].clear();
-                                checkAndSetPriceAndQty(fullMeasureTypes[i],
-                                    priceControllers[i], qtyControllers[i]);
-                              },
-                              onChanged: (value) {
-                                checkAndSetPriceAndQty(fullMeasureTypes[i],
-                                    priceControllers[i], qtyControllers[i]);
-                              },
-                              hint: "Selling Price",
-                            ).expandIfNeeded(),
-                            12.horizontalSpacing(),
-                            TextFieldBoxWidget.onlyDigit(
-                              bottomPad: 2,
-                              inputFormatters: [intFormatters],
-                              normalBorderColor: transperent,
-                              withPrimaryBorder: false,
-                              controller: qtyControllers[i],
-                              onCleared: () {
-                                qtyControllers[i].clear();
-                                checkAndSetPriceAndQty(fullMeasureTypes[i],
-                                    priceControllers[i], qtyControllers[i]);
-                              },
-                              onChanged: (value) {
-                                checkAndSetPriceAndQty(fullMeasureTypes[i],
-                                    priceControllers[i], qtyControllers[i]);
-                              },
-                              hint: "Quantity",
-                            ).expandIfNeeded(),
-                          ],
-                        ),
-                        Divider(
-                          color: DesignColor.primary.withAlpha(50),
-                          height: 2,
-                        ),
-                        gap10,
-                      ],
-                    );
-                  }),
-                if (showEditControllers)
-                  "Update New Rates".elButnStyle(
-                      onTap: () async {
-                        if (await noInternetAvailable()) {
-                          showNoInternetDialog(context);
-                          return;
-                        }
-                        if (itemDynamicForUpdate != null) {
-                          itemDynamic = itemDynamicForUpdate!.copyWith();
-                          itemMap[itemDynamicForUpdate!.date
-                                  .toDayMonthYearUnderscore()] =
-                              itemDynamicForUpdate!.copyWith();
-                          updateDateKeys();
-                          setState(() {});
-                          showEditControllers = false;
-                          itemDynamicForUpdate = null;
-                          await addNewItem(
-                              item.shopId, item, itemDynamicForUpdate!);
+          if (amIPartOfThisShop(widget.shop))
+            "Select Date For New Rates".elButnStyle(
+              onTap: () async {
+                DateTime? date = await displayAndSelectDate(context);
+                if (date != null) {
+                  dateForEditUpdate = date;
+                  setItemDyanmicForUpdate(date);
+                  updateControllersBasedOnDate(date.toDayMonthYearUnderscore());
 
-                          triggerSnackbar("New Rates Updated");
+                  setState(() {
+                    showEditControllers = true;
+                  });
+                }
+              },
+            ),
+          if (dateForEditUpdate != null)
+            TextStyWidget.primary(
+                    fontweight: FontWeight.w700,
+                    fontsize: w * 0.04,
+                    text: dateForEditUpdate!.toDayFullMonthYear())
+                .alignCenter(),
+          gap10,
+          if (amIPartOfThisShop(widget.shop))
+            StatefulBuilder(builder: (c, doTextState) {
+              textState = doTextState;
+              return Column(
+                children: [
+                  // if(itemDynamic!= null && itemDynamic!.sellingPrices)
+                  if (showEditControllers)
+                    MeasureTypesListWidget(
+                      measureTypes: measureTypes,
+                      onTap: (e) {
+                        if (measureTypes.contains(e)) {
+                          measureTypes.remove(e);
+                          if (selectedMeasureType == e) {
+                            if (measureTypes.isNotEmpty) {
+                              selectedMeasureType = measureTypes.first;
+                            } else {
+                              selectedMeasureType = null;
+                            }
+                          }
+                        } else {
+                          measureTypes.add(e);
+                          selectedMeasureType = e;
                         }
+                        updateTextState();
                       },
-                      ignore:
-                          measureTypes.isEmpty || !isUpdateDataHasMinimalData())
-              ],
-            );
-          }),
+                    ),
+                  if (showEditControllers && measureTypes.isNotEmpty)
+                    Row(children: [
+                      lableAboveTextField("Selling Price*  (₹)")
+                          .alignLeft()
+                          .expandIfNeeded(),
+                      20.horizontalSpacing(),
+                      lableAboveTextField("Qty").alignLeft().expandIfNeeded(),
+                    ]).applySymmetricPadding(horizontal: 8, vertical: 12),
+                  if (showEditControllers && measureTypes.isNotEmpty)
+                    ...List.generate(fullMeasureTypes.length, (i) {
+                      MeasureType measureType = fullMeasureTypes[i];
+                      if (!measureTypes.contains(measureType)) {
+                        return SizedBox();
+                      }
+                      return Column(
+                        children: [
+                          TextStyWidget.primary(
+                            text: measureType.name,
+                            fontweight: FontWeight.w800,
+                          ).alignLeft().applyHorizontalPadding(horizontal: 8),
+                          Row(
+                            children: [
+                              TextFieldBoxWidget.onlyDigit(
+                                bottomPad: 2,
+                                inputFormatters: [intFormatters],
+                                normalBorderColor: transperent,
+                                withPrimaryBorder: false,
+                                controller: priceControllers[i],
+                                onCleared: () {
+                                  priceControllers[i].clear();
+                                  checkAndSetPriceAndQty(fullMeasureTypes[i],
+                                      priceControllers[i], qtyControllers[i]);
+                                },
+                                onChanged: (value) {
+                                  checkAndSetPriceAndQty(fullMeasureTypes[i],
+                                      priceControllers[i], qtyControllers[i]);
+                                },
+                                hint: "Selling Price",
+                              ).expandIfNeeded(),
+                              12.horizontalSpacing(),
+                              TextFieldBoxWidget.onlyDigit(
+                                bottomPad: 2,
+                                inputFormatters: [intFormatters],
+                                normalBorderColor: transperent,
+                                withPrimaryBorder: false,
+                                controller: qtyControllers[i],
+                                onCleared: () {
+                                  qtyControllers[i].clear();
+                                  checkAndSetPriceAndQty(fullMeasureTypes[i],
+                                      priceControllers[i], qtyControllers[i]);
+                                },
+                                onChanged: (value) {
+                                  checkAndSetPriceAndQty(fullMeasureTypes[i],
+                                      priceControllers[i], qtyControllers[i]);
+                                },
+                                hint: "Quantity",
+                              ).expandIfNeeded(),
+                            ],
+                          ),
+                          Divider(
+                            color: DesignColor.primary.withAlpha(50),
+                            height: 2,
+                          ),
+                          gap10,
+                        ],
+                      );
+                    }),
+                  if (showEditControllers)
+                    "Update New Rates".elButnStyle(
+                        onTap: () async {
+                          if (await noInternetAvailable()) {
+                            showNoInternetDialog(context);
+                            return;
+                          }
+                          if (itemDynamicForUpdate != null) {
+                            itemDynamic = itemDynamicForUpdate!.copyWith();
+                            itemMap[itemDynamicForUpdate!.date
+                                    .toDayMonthYearUnderscore()] =
+                                itemDynamicForUpdate!.copyWith();
+                            updateDateKeys();
+                            setState(() {});
+                            showEditControllers = false;
+                            itemDynamicForUpdate = null;
+                            dateForEditUpdate = null;
+                            await updateDynamicItem(itemDynamicForUpdate!);
+
+                            triggerSnackbar("New Rates Updated");
+                          }
+                        },
+                        ignore: measureTypes.isEmpty ||
+                            !isUpdateDataHasMinimalData())
+                ],
+              );
+            }),
         ],
       ).applySymmetricPadding().verticalScrollable(),
     );
   }
 
   bool isUpdateDataHasMinimalData() {
-    printLog(
-        "data empty len && ${itemDynamicForUpdate!.sellingPrices.length} : ${itemDynamicForUpdate != null}");
+    // printLog(        "data empty len && ${itemDynamicForUpdate!.sellingPrices.length} : ${itemDynamicForUpdate != null}");
     if (itemDynamicForUpdate != null) {
       // if (itemDynamicForUpdate!.sellingPrices.isNotEmpty) {
       //   // printLog(            "loog ${itemDynamicForUpdate!.sellingPrices.first.toString()}");

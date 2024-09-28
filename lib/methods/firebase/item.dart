@@ -39,7 +39,7 @@ addNewItem(String shopId, Item item, ItemDynamic itemDynamic) async {
   await updateStaticItem(item);
   await updateDynamicItem(itemDynamic);
 }
-
+ 
 updateStaticItem(Item item) async {
   final ref = FirebaseDatabase.instance
       .ref()

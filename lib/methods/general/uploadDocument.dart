@@ -4,6 +4,35 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:groceryshopprices/lib.dart';
 import 'package:path/path.dart' hide context;
 
+Future<bool> deleteImageFromFirebaseStorage(String link) async {
+  try {
+    // This is the path after 'o/' in the Firebase storage URL
+    String filePath = link
+        .replaceAll(
+            "https://firebasestorage.googleapis.com/v0/b/grocery-shop-prices.appspot.com/o/",
+            "")
+        .replaceAll("%2F", "/");
+    printLog("link ${filePath}");
+    if (filePath.contains("?")) {
+      filePath = filePath.split("?").first;
+    }
+    printLog("link ${filePath}");
+    // 'groceryshopprices/subpath/imgid_1727513636382_compressed_image.jpg';
+    // return false;
+    // Get reference to the file in Firebase Storage
+    FirebaseStorage storage = FirebaseStorage.instance;
+    Reference ref = storage.ref().child(filePath);
+
+    // Delete the file
+    await ref.delete();
+    printLog('Image deleted successfully.');
+    return true;
+  } catch (e) {
+    printLog('Image deleted Error occurred while deleting the image: $e');
+  }
+  return false;
+}
+
 Future<String> uploadDocument(File? _photo,
     {BuildContext? context,
     String? subpath,
@@ -19,7 +48,7 @@ Future<String> uploadDocument(File? _photo,
     return url;
   }
   final fileName = basename(_photo.path);
-  final destination = '$appnameForFirebase/${subpath??"subpath"}/$fileName';
+  final destination = '$appnameForFirebase/${subpath ?? "subpath"}/$fileName';
 
   try {
     final ref = FirebaseStorage.instance.ref(destination);

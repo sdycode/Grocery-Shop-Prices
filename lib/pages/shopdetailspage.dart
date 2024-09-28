@@ -40,7 +40,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
               children: [
                 Column(
                   children: [
-                    if (isMyRequestPending(shop))
+                    if (isMyRequestPending(shop) && isValidUser)
                       Card(
                         child: TextStyWidget.primary(
                           text: "Request Pending",
@@ -88,6 +88,8 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                               itemBuilder: (c, i) {
                                 return ItemBasicCardFromId(
                                   itemId: itemIds[i],
+                                  shop: shop
+                                  ,
                                 );
                               });
                         })
@@ -110,9 +112,11 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
 
 class ItemBasicCardFromId extends StatelessWidget {
   final String itemId;
+  final ShopModel shop;
   const ItemBasicCardFromId({
     Key? key,
     required this.itemId,
+    required this.shop,
   }) : super(key: key);
 
   @override
@@ -141,7 +145,7 @@ class ItemBasicCardFromId extends StatelessWidget {
                   onTap: () {
                     if (item != null && itemDynamic != null) {
                       showItemDetailDialog(context,
-                          item: item!, itemMap: itemMap);
+                          item: item!, itemMap: itemMap, shop: shop);
                     }
                   },
                   child: Card(
@@ -176,7 +180,8 @@ class ItemBasicCardFromId extends StatelessWidget {
                                 TextStyWidget.black(
                                     fontweight: FontWeight.w500,
                                     fontsize: w * 0.04,
-                                    text: "(${priceModel.qty} ${priceModel.measureType.name})"),
+                                    text:
+                                        "(${priceModel.qty} ${priceModel.measureType.name})"),
                               ],
                             );
                           })
