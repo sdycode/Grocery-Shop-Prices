@@ -63,6 +63,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
     if (isCompleteDataFilledForItem()) {
       item = Item(
           id: "id",
+          shopId: shop.id,
           name: nameC.text.trim(),
           imageLinks: imageLinks,
           altenateNames: altenateNames,
@@ -431,4 +432,4 @@ class MeasureTypesListWidget extends StatelessWidget {
       }).toList(),
     ).applyVerticalPadding(padding: 4);
   }
-}
+} 

@@ -12,6 +12,7 @@ class Item {
   List<String> imageLinks;
   List<String> altenateNames;
   List<MeasureType> measureTypes;
+  String shopId;
   Item({
     required this.id,
     required this.name,
@@ -19,6 +20,7 @@ class Item {
     required this.imageLinks,
     required this.altenateNames,
     required this.measureTypes,
+    required this.shopId,
   });
 
   Item copyWith({
@@ -28,6 +30,7 @@ class Item {
     List<String>? imageLinks,
     List<String>? altenateNames,
     List<MeasureType>? measureTypes,
+    String? shopId,
   }) {
     return Item(
       id: id ?? this.id,
@@ -36,6 +39,7 @@ class Item {
       imageLinks: imageLinks ?? this.imageLinks,
       altenateNames: altenateNames ?? this.altenateNames,
       measureTypes: measureTypes ?? this.measureTypes,
+      shopId: shopId ?? this.shopId,
     );
   }
 
@@ -47,14 +51,14 @@ class Item {
       'imageLinks': imageLinks,
       'altenateNames': altenateNames,
       'measureTypes': measureTypes.map((x) => x.name).toList(),
+      'shopId': shopId,
     };
   }
 
-  factory Item.fromMap(Map map) {
+  factory Item.fromMap(Map  map) {
     return Item(
-      id: map['id'] as String,
+       id: map['id'] as String,
       name: map['name'] as String,
-      description: map['description'] as String,
       imageLinks: List<String>.from(((map['imageLinks'] ?? []) as List)),
       altenateNames: List<String>.from(((map['altenateNames'] ?? []) as List)),
       measureTypes: List<MeasureType>.from(
@@ -62,6 +66,7 @@ class Item {
           (x) => (x as String).getMeasureType(),
         ),
       ),
+      shopId: map['shopId'] as String,
     );
   }
 /*
@@ -83,28 +88,31 @@ class Item {
 
   @override
   String toString() {
-    return 'Item(id: $id, name: $name, description: $description, imageLinks: $imageLinks, altenateNames: $altenateNames, measureTypes: $measureTypes)';
+    return 'Item(id: $id, name: $name, description: $description, imageLinks: $imageLinks, altenateNames: $altenateNames, measureTypes: $measureTypes, shopId: $shopId)';
   }
 
   @override
   bool operator ==(covariant Item other) {
     if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.name == name &&
-        other.description == description &&
-        listEquals(other.imageLinks, imageLinks) &&
-        listEquals(other.altenateNames, altenateNames) &&
-        listEquals(other.measureTypes, measureTypes);
+  
+    return 
+      other.id == id &&
+      other.name == name &&
+      other.description == description &&
+      listEquals(other.imageLinks, imageLinks) &&
+      listEquals(other.altenateNames, altenateNames) &&
+      listEquals(other.measureTypes, measureTypes) &&
+      other.shopId == shopId;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
-        name.hashCode ^
-        description.hashCode ^
-        imageLinks.hashCode ^
-        altenateNames.hashCode ^
-        measureTypes.hashCode;
+      name.hashCode ^
+      description.hashCode ^
+      imageLinks.hashCode ^
+      altenateNames.hashCode ^
+      measureTypes.hashCode ^
+      shopId.hashCode;
   }
 }

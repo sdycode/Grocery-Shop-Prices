@@ -29,8 +29,9 @@ showItemDetailDialog(BuildContext context,
                   );
                 }),
               gap10,
-              "Full Details".elButnStyle(onTap: () {}),
-              "Update Rates".elButnStyle(onTap: () {
+              // "Full Details".elButnStyle(onTap: () {}),
+              "Full Rates".elButnStyle(onTap: () {
+                exitOrAttemptExit000(context);
                 goToScreenFor000(context,
                     UpdateItemPricesPage(item: item, itemMap: itemMap));
               })
