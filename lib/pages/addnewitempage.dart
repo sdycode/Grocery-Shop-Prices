@@ -432,4 +432,4 @@ class MeasureTypesListWidget extends StatelessWidget {
       }).toList(),
     ).applyVerticalPadding(padding: 4);
   }
-} 
+}

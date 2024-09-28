@@ -31,82 +31,95 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   Widget build(BuildContext context) {
     itemIds.clear();
     return Scaffold(
-      appBar: appBarWidget(context: context, text: shop.name),
-      body: StreamBuilder<ShopModel?>(
-          stream: null,
-          builder: (context, snapshot) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        appBar: appBarWidget(context: context, text: shop.name),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
               children: [
-                Column(
-                  children: [
-                    if (isMyRequestPending(shop) && isValidUser)
-                      Card(
-                        child: TextStyWidget.primary(
-                          text: "Request Pending",
-                          fontsize: w * 0.056,
-                        ).alignCenter().applyPadding(),
-                      ),
-                    if (!isMyRequestPending(shop) &&
-                        !amIPartOfThisShop(shop) &&
-                        isValidUser)
-                      "Join Shop".elButnStyle(onTap: () async {
-                        if (await noInternetAvailable()) {
-                          showNoInternetDialog(context);
-                          return;
-                        }
-                        await requstShopToJoin(shop);
-                        setState(() {});
-                      }),
-                    StreamBuilder(
-                        stream: getItemIdsListStream(shop.id),
-                        builder: (_, snap) {
-                          if (snap.hasData && snap.data!.isNotEmpty) {
-                            itemIdsMap[shop.id] = snap.data!;
-                            itemIds = snap.data!;
-                          }
-                          if (itemIds.isEmpty) {
-                            return Center(
-                              child: TextStyWidget.primary(
-                                text: "No Items in the shop",
-                                fontweight: FontWeight.w700,
-                                fontsize: w * 0.065,
-                                maxLines: 4,
+                if (isMyRequestPending(shop) && isValidUser)
+                  Card(
+                    child: TextStyWidget.primary(
+                      text: "Request Pending",
+                      fontsize: w * 0.056,
+                    ).alignCenter().applyPadding(),
+                  ),
+                if (!isMyRequestPending(shop) &&
+                    !amIPartOfThisShop(shop) &&
+                    isValidUser)
+                  "Join Shop".elButnStyle(onTap: () async {
+                    if (await noInternetAvailable()) {
+                      showNoInternetDialog(context);
+                      return;
+                    }
+                    await requstShopToJoin(shop);
+                    setState(() {});
+                  }),
+                StreamBuilder(
+                    stream: getItemIdsListStream(shop.id),
+                    builder: (_, snap) {
+                      if (snap.hasData && snap.data!.isNotEmpty) {
+                        itemIdsMap[shop.id] = snap.data!;
+                        itemIds = snap.data!;
+                      }
+                      if (itemIds.isEmpty) {
+                        return Center(
+                          child: TextStyWidget.primary(
+                            text: "No Items in the shop",
+                            fontweight: FontWeight.w700,
+                            fontsize: w * 0.065,
+                            maxLines: 4,
+                          ),
+                        ).constrainFixedHeight(h * 0.7);
+                      }
+                      return GridView.builder(
+                          itemCount: itemIds.length,
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                  mainAxisSpacing: 8,
+                                  crossAxisSpacing: 8,
+                                  childAspectRatio: 1,
+                                  crossAxisCount: 2),
+                          itemBuilder: (c, i) {
+                            return InkWell(
+                              onLongPress: amIPartOfThisShop(shop)
+                                  ? () {
+                                      showYesNoAlertDialog(context,
+                                          yesBgColor: Colors.red,
+                                          noBgColor: Colors.blue.shade200,
+                                          yes: "हो",
+                                          no: "नाही",
+                                          yesTextColor: Colors.white,
+                                          noTextColor: Colors.black,
+                                          confirmMessage:
+                                              "तुम्हाला खरंच वस्तू काढून टाकायची आहे का",
+                                          // "Do you want to really delete this item?"
+                                          onYesClicked: () {
+                                        removeItem(itemIds[i], shop.id);
+                                      });
+                                    }
+                                  : null,
+                              child: ItemBasicCardFromId(
+                                itemId: itemIds[i],
+                                shop: shop,
                               ),
-                            ).constrainFixedHeight(h * 0.7);
-                          }
-                          return GridView.builder(
-                              itemCount: itemIds.length,
-                              physics: const NeverScrollableScrollPhysics(),
-                              shrinkWrap: true,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                      mainAxisSpacing: 8,
-                                      crossAxisSpacing: 8,
-                                      childAspectRatio: 1,
-                                      crossAxisCount: 2),
-                              itemBuilder: (c, i) {
-                                return ItemBasicCardFromId(
-                                  itemId: itemIds[i],
-                                  shop: shop
-                                  ,
-                                );
-                              });
-                        })
-                  ],
-                ).verticalScrollable().expandIfNeeded(),
-                if (amIPartOfThisShop(shop))
-                  "Add New Item".elButnStyle(onTap: () async {
-                    goToScreenFor000(
-                        context,
-                        AddNewItemPage(
-                          shop: shop,
-                        ));
-                  }).applyPadding()
+                            );
+                          });
+                    })
               ],
-            );
-          }),
-    );
+            ).verticalScrollable().expandIfNeeded(),
+            if (amIPartOfThisShop(shop))
+              "Add New Item".elButnStyle(onTap: () async {
+                goToScreenFor000(
+                    context,
+                    AddNewItemPage(
+                      shop: shop,
+                    ));
+              }).applyPadding()
+          ],
+        ));
   }
 }
 
@@ -141,7 +154,7 @@ class ItemBasicCardFromId extends StatelessWidget {
                 if (item == null) {
                   return const SizedBox();
                 }
-                return BouncingBtn.fast(
+                return InkWell(
                   onTap: () {
                     if (item != null && itemDynamic != null) {
                       showItemDetailDialog(context,

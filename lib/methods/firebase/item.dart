@@ -1,6 +1,22 @@
 import 'dart:async';
 
 import 'package:groceryshopprices/lib.dart';
+Future
+removeItem(String itemId, String shopId) async {
+  await FirebaseDatabase.instance
+      .ref()
+      .child(appnameForFirebase)
+      .child("shop_itemids")
+      .child(shopId)
+      .child(itemId)
+      .remove();
+  await FirebaseDatabase.instance
+      .ref()
+      .child(appnameForFirebase)
+      .child("items")
+      .child(itemId)
+      .remove();
+}
 
 Stream<List<String>> getItemIdsListStream(String shopId) {
   return FirebaseDatabase.instance
@@ -39,7 +55,7 @@ addNewItem(String shopId, Item item, ItemDynamic itemDynamic) async {
   await updateStaticItem(item);
   await updateDynamicItem(itemDynamic);
 }
- 
+
 updateStaticItem(Item item) async {
   final ref = FirebaseDatabase.instance
       .ref()

@@ -34,6 +34,9 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
   List<TextEditingController> priceControllers = [];
   DateTime? dateForEditUpdate;
   List<TextEditingController> qtyControllers = [];
+
+  TextEditingController sellingPriceC = TextEditingController();
+  TextEditingController qtyC = TextEditingController();
   MeasureType? selectedMeasureType;
   StateSetter? textState;
   updateTextState() {
@@ -265,6 +268,11 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
             },
           ).placeInContainer(w, w * 0.05 + 16).applyVerticalPadding(),
           gap10,
+          if (amIPartOfThisShop(widget.shop))
+            "Add New Rates".elButnStyle(onTap: () async {
+              await addNewRatesForItemDialog(
+                  context, item, itemMap, sellingPriceC, qtyC);
+            }),
           if (amIPartOfThisShop(widget.shop))
             "Select Date For New Rates".elButnStyle(
               onTap: () async {
