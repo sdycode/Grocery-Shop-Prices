@@ -1,14 +1,16 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:groceryshopprices/lib.dart';
 
-showItemDetailDialog(BuildContext context,
-    {required Item item,
-    required Map<String, ItemDynamic> itemMap,
-    required ShopModel shop}) async {
+showItemDetailDialog(
+  BuildContext context, {
+  required Item item,
+  required Map<String, ItemDynamic> itemMap,
+  required ShopModel shop,
+  VoidCallback? onUpdate,
+}) async {
   String latestDateString = findNearestDateKey(itemMap.keys.toList());
   ItemDynamic? itemDynamic = itemMap[latestDateString];
-
-  showDialog(
+  await showDialog(
       context: context,
       builder: (_) {
         return Dialog(
@@ -32,15 +34,18 @@ showItemDetailDialog(BuildContext context,
                 }),
               gap10,
               // "Full Details".elButnStyle(onTap: () {}),
-              "Full Rates".elButnStyle(onTap: () {
+              "Full Details".elButnStyle(onTap: () async {
                 exitOrAttemptExit000(context);
-                goToScreenFor000(
+                await goToScreenFor000(
                     context,
                     UpdateItemPricesPage(
                       item: item,
                       itemMap: itemMap,
                       shop: shop,
                     ));
+                if (onUpdate != null) {
+                  onUpdate();
+                }
               })
             ],
           ).verticalScrollable().applySymmetricPadding(),

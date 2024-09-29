@@ -67,6 +67,7 @@ updateStaticItem(Item item) async {
 
 updateDynamicItem(ItemDynamic itemDynamic, {DateTime? date}) async {
   String dateString = (itemDynamic.date).dateToUnder_Score_String();
+printLog("prices ${itemDynamic.sellingPrices.toString()}");
   final ref = FirebaseDatabase.instance
       .ref()
       .child(appnameForFirebase)

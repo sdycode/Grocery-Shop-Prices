@@ -10,11 +10,11 @@ Future goToScreenFor000(BuildContext context, Widget destinationPage) async {
   );
 }
 
-Future<bool?> exitOrAttemptExit000(BuildContext context,
-    {bool enforceExit = true, bool? returnValue}) async {
+Future<dynamic> exitOrAttemptExit000(BuildContext context,
+    {bool enforceExit = true, dynamic returnValue}) async {
   // Original function name: navigatePopContext
   if (enforceExit) {
-    Navigator.pop<bool?>(context, returnValue);
+    Navigator.pop<dynamic>(context, returnValue);
     return returnValue;
   } else {
     return await Navigator.maybePop(context, returnValue);

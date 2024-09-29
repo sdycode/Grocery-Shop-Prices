@@ -46,7 +46,7 @@ String get username => auth.currentUser == null
         ? auth.currentUser!.displayName!
         : "Guest";
 ShopModel? myShopModel;
-String get todayDate => nowDTime.toDayMonthYearUnderscore();
+String get todayDate => nowDTime.dateToUnder_Score_String();
 String get currentShopId =>
     (myCustomUser != null && myCustomUser!.currentShopId != null)
         ? myCustomUser!.currentShopId!

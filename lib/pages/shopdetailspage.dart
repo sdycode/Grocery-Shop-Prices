@@ -155,10 +155,14 @@ class ItemBasicCardFromId extends StatelessWidget {
                   return const SizedBox();
                 }
                 return InkWell(
-                  onTap: () {
+                  onTap: () async{
                     if (item != null && itemDynamic != null) {
-                      showItemDetailDialog(context,
-                          item: item!, itemMap: itemMap, shop: shop);
+                  await    showItemDetailDialog(context,
+                          item: item!, itemMap: itemMap, shop: shop,
+                          onUpdate: () {
+                            
+                          },
+                          );
                     }
                   },
                   child: Card(

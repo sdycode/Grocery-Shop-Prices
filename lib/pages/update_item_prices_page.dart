@@ -1,7 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:wheel_chooser/wheel_chooser.dart';
 
 import 'package:groceryshopprices/lib.dart';
@@ -22,6 +21,9 @@ class UpdateItemPricesPage extends StatefulWidget {
 }
 
 class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
+  // FixedExtentScrollController fixedExtentScrollController =
+  //     FixedExtentScrollController(initialItem: 0);
+  int position = 0;
   late Item item;
   late Map<String, ItemDynamic> itemMap;
   bool showEditControllers = false;
@@ -53,6 +55,7 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
     item = widget.item;
     itemMap = widget.itemMap;
     String latestDateString = findNearestDateKey(itemMap.keys.toList());
+
     currentDateKey = latestDateString;
     itemDynamic = itemMap[latestDateString];
     updateDateKeys();
@@ -62,6 +65,9 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
         List.generate(fullMeasureTypes.length, (i) => TextEditingController());
     qtyControllers =
         List.generate(fullMeasureTypes.length, (i) => TextEditingController());
+    // fixedExtentScrollController.addListener(() {
+    //   printLog("scroll ${fixedExtentScrollController.offset}");
+    // });
   }
 
   updateDateKeys() {
@@ -69,11 +75,17 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
         itemMap.keys.map((key) => key.dateStringTo_DateTime()).toList();
     dateList.sort(
         (a, b) => a.millisecondsSinceEpoch.compareTo(b.millisecondsSinceEpoch));
-    datesKeys = dateList.map((e) => e.toDayMonthYearUnderscore()).toList();
+    datesKeys = dateList.map((e) => e.dateToUnder_Score_String()).toList();
+    if (currentDateKey != null) {
+      int indexOfDate = datesKeys.indexOf(currentDateKey!);
+      if (indexOfDate >= 0) {
+        position = indexOfDate;
+      }
+    }
   }
 
   setItemDyanmicForUpdate(DateTime date) {
-    String dateString = date.toDayMonthYearUnderscore();
+    String dateString = date.dateToUnder_Score_String();
     // printLog(        "dates ${dateString} : ${itemMap.keys.toString()} : ${itemMap.containsKey(dateString)}");
     if (itemMap.containsKey(dateString)) {
       itemDynamicForUpdate = itemMap[dateString];
@@ -240,6 +252,9 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
             }),
           gap20,
           WheelChooser<String>.custom(
+            startPosition: 0,
+
+            // controller: fixedExtentScrollController,
             itemSize: w * 0.3 + 16,
             horizontal: true,
             children: datesKeys
@@ -270,17 +285,74 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
           gap10,
           if (amIPartOfThisShop(widget.shop))
             "Add New Rates".elButnStyle(onTap: () async {
-              await addNewRatesForItemDialog(
+              sellingPriceC.clear();
+              qtyC.clear();
+              dynamic newd = await addNewRatesForItemDialog(
                   context, item, itemMap, sellingPriceC, qtyC);
+              if (newd.runtimeType == DateTime.now().runtimeType) {
+                datesKeys.add((newd as DateTime).dateToUnder_Score_String());
+                datesKeys = datesKeys.toSet().toList();
+                printLog("updateDateKeys ${datesKeys.length}");
+                updateDateKeys();
+                printLog("updateDateKeys len ${datesKeys.length}");
+              }
+              setState(() {});
             }),
-          if (amIPartOfThisShop(widget.shop))
+        ],
+      ).applySymmetricPadding().verticalScrollable(),
+    );
+  }
+
+  bool isUpdateDataHasMinimalData() {
+    // printLog(        "data empty len && ${itemDynamicForUpdate!.sellingPrices.length} : ${itemDynamicForUpdate != null}");
+    if (itemDynamicForUpdate != null) {
+      // if (itemDynamicForUpdate!.sellingPrices.isNotEmpty) {
+      //   // printLog(            "loog ${itemDynamicForUpdate!.sellingPrices.first.toString()}");
+      // }
+      return itemDynamicForUpdate!.sellingPrices.isNotEmpty;
+    }
+    return false;
+  }
+
+  checkAndSetPriceAndQty(MeasureType measureType,
+      TextEditingController sellingPriceC, TextEditingController qtyC) {
+    printLog("data isnooo");
+
+    int? price = int.tryParse(sellingPriceC.text.trim());
+    int? qty = int.tryParse(qtyC.text.trim());
+    printLog("data is $price : $qty");
+    if (itemDynamicForUpdate != null) {
+      int index = itemDynamicForUpdate!.sellingPrices
+          .indexWhere((e) => e.measureType == measureType);
+      if (price != null && qty != null) {
+        PriceModel priceModel =
+            PriceModel(measureType: measureType, price: price, qty: qty);
+        if (index < 0) {
+          itemDynamicForUpdate!.sellingPrices.add(priceModel);
+        } else {
+          itemDynamicForUpdate!.sellingPrices[index] = priceModel;
+        }
+      } else {
+        if (index >= 0) {
+          itemDynamicForUpdate!.sellingPrices
+              .removeWhere((e) => e.measureType == measureType);
+        }
+      }
+    }
+    printLog(" data remove len ${itemDynamicForUpdate!.sellingPrices.length}");
+    updateTextState();
+  }
+}
+
+/*
+ if (amIPartOfThisShop(widget.shop))
             "Select Date For New Rates".elButnStyle(
               onTap: () async {
                 DateTime? date = await displayAndSelectDate(context);
                 if (date != null) {
                   dateForEditUpdate = date;
                   setItemDyanmicForUpdate(date);
-                  updateControllersBasedOnDate(date.toDayMonthYearUnderscore());
+                  updateControllersBasedOnDate(date.dateToUnder_Score_String());
 
                   setState(() {
                     showEditControllers = true;
@@ -398,7 +470,7 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
                           if (itemDynamicForUpdate != null) {
                             itemDynamic = itemDynamicForUpdate!.copyWith();
                             itemMap[itemDynamicForUpdate!.date
-                                    .toDayMonthYearUnderscore()] =
+                                    .dateToUnder_Score_String()] =
                                 itemDynamicForUpdate!.copyWith();
                             updateDateKeys();
                             setState(() {});
@@ -415,51 +487,7 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
                 ],
               );
             }),
-        ],
-      ).applySymmetricPadding().verticalScrollable(),
-    );
-  }
-
-  bool isUpdateDataHasMinimalData() {
-    // printLog(        "data empty len && ${itemDynamicForUpdate!.sellingPrices.length} : ${itemDynamicForUpdate != null}");
-    if (itemDynamicForUpdate != null) {
-      // if (itemDynamicForUpdate!.sellingPrices.isNotEmpty) {
-      //   // printLog(            "loog ${itemDynamicForUpdate!.sellingPrices.first.toString()}");
-      // }
-      return itemDynamicForUpdate!.sellingPrices.isNotEmpty;
-    }
-    return false;
-  }
-
-  checkAndSetPriceAndQty(MeasureType measureType,
-      TextEditingController sellingPriceC, TextEditingController qtyC) {
-    printLog("data isnooo");
-
-    int? price = int.tryParse(sellingPriceC.text.trim());
-    int? qty = int.tryParse(qtyC.text.trim());
-    printLog("data is $price : $qty");
-    if (itemDynamicForUpdate != null) {
-      int index = itemDynamicForUpdate!.sellingPrices
-          .indexWhere((e) => e.measureType == measureType);
-      if (price != null && qty != null) {
-        PriceModel priceModel =
-            PriceModel(measureType: measureType, price: price, qty: qty);
-        if (index < 0) {
-          itemDynamicForUpdate!.sellingPrices.add(priceModel);
-        } else {
-          itemDynamicForUpdate!.sellingPrices[index] = priceModel;
-        }
-      } else {
-        if (index >= 0) {
-          itemDynamicForUpdate!.sellingPrices
-              .removeWhere((e) => e.measureType == measureType);
-        }
-      }
-    }
-    printLog(" data remove len ${itemDynamicForUpdate!.sellingPrices.length}");
-    updateTextState();
-  }
-}
+*/
 // if (price != null && qty != null) {
 //   sellingPrices.clear();
 //   sellingPrices.add(PriceModel(

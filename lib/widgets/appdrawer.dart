@@ -42,11 +42,12 @@ class AppDrawer extends StatelessWidget {
                   ListView.builder(
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
-                      itemCount: allShopsMap.length,
+                      itemCount: allMYShopsMap.length,
                       itemBuilder: (c, i) {
                         return ShopCheckCard(
-                          shopIds: allShopsMap.values.map((e) => e.id).toList(),
-                          shop: allShopsMap.values.toList()[i],
+                          shopIds:
+                              allMYShopsMap.values.map((e) => e.id).toList(),
+                          shop: allMYShopsMap.values.toList()[i],
                         );
                       })
                 ],
