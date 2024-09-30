@@ -121,13 +121,25 @@ class ShopCheckCard extends StatelessWidget {
             if (shop.images.isNotEmpty)
               MultiSourceImageWidget(
                 img: shop.images.first,
-                size: w * 0.16,
+                size: w * 0.24,
                 roundRad: 12,
               ).applyPadding(),
-            TextStyWidget.black(
-              text: shop.name,
-              maxLines: 4,
-              fontweight: FontWeight.w700,
+            Column(
+              children: [
+                TextStyWidget.black(
+                  text: shop.name,
+                  maxLines: 4,
+                  fontweight: FontWeight.w700,
+                ),
+                "Edit".elButnStyle(
+                    onTap: () {
+                      exitOrAttemptExit000(context);
+                      goToScreenFor000(context, ShopRegistrationPage(shop: shop));
+                    },
+                    sidePad: 12,
+                    inneerVertPad: 2,
+                    vertPad: 4),
+              ],
             ).expandIfNeeded(),
             if (shopIds.length > 1)
               BouncingBtn.fast(
@@ -184,7 +196,7 @@ class RequestCameListWidget extends StatelessWidget {
                             if (shop.images.isNotEmpty)
                               MultiSourceImageWidget(
                                 img: shop.images.first,
-                                size: w * 0.10,
+                                size: w * 0.24,
                                 roundRad: 8,
                               ),
                             // TextStyWidget.primary(text: "Join Requests in shop")

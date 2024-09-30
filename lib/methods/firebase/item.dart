@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:groceryshopprices/lib.dart';
-Future
-removeItem(String itemId, String shopId) async {
+
+Future removeItem(String itemId, String shopId) async {
   await FirebaseDatabase.instance
       .ref()
       .child(appnameForFirebase)
@@ -15,6 +15,20 @@ removeItem(String itemId, String shopId) async {
       .child(appnameForFirebase)
       .child("items")
       .child(itemId)
+      .remove();
+}
+
+removeItemDynamicForDate(
+  ItemDynamic itemDynamic,
+) async {
+  String dateString = (itemDynamic.date).dateToUnder_Score_String();
+  printLog("prices ${itemDynamic.sellingPrices.toString()}");
+  await FirebaseDatabase.instance
+      .ref()
+      .child(appnameForFirebase)
+      .child("items_dynamic")
+      .child(itemDynamic.id)
+      .child(dateString)
       .remove();
 }
 
@@ -67,7 +81,7 @@ updateStaticItem(Item item) async {
 
 updateDynamicItem(ItemDynamic itemDynamic, {DateTime? date}) async {
   String dateString = (itemDynamic.date).dateToUnder_Score_String();
-printLog("prices ${itemDynamic.sellingPrices.toString()}");
+  printLog("prices ${itemDynamic.sellingPrices.toString()}");
   final ref = FirebaseDatabase.instance
       .ref()
       .child(appnameForFirebase)

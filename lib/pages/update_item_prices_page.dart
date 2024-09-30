@@ -156,7 +156,7 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
                               padding: 0,
                             ),
                       if (showImgUploadloading)
-                        CircularProgressIndicator.adaptive()
+                        const CircularProgressIndicator.adaptive()
                             .placeInContainer(w, w * 0.65),
                       if (amIPartOfThisShop(widget.shop))
                         Align(
@@ -170,27 +170,21 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
                                     state(() {
                                       showImgUploadloading = false;
                                     });
-                                    // state(() {
-                                    //   loadingForImg = false;
-                                    // });
-                                    // setState(() {});
+                                    ;
                                   },
                                   () {
                                     state(() {
                                       showImgUploadloading = true;
                                     });
-                                    // printLog("update called $loadingForImg");
-                                    // state(() {
-                                    //   loadingForImg = true;
-                                    // });
                                   },
                                 );
                               },
                               icon: Container(
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                       color: Colors.white,
                                       shape: BoxShape.circle),
-                                  child: Icon(Icons.edit).applyPadding())),
+                                  child:
+                                      const Icon(Icons.edit).applyPadding())),
                         )
                     ],
                   ).placeInContainer(w, w * 0.65),
@@ -217,9 +211,9 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
                               showImgUploadloading = false;
                             });
                             await updateStaticItem(item);
-                            oldLinks!.forEach((dlink) {
+                            for (var dlink in oldLinks) {
                               deleteImageFromFirebaseStorage(dlink);
-                            });
+                            }
                           }
                         },
                         loading: showImgUploadloading,
@@ -246,8 +240,24 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
             ),
           if (itemDynamic != null)
             ...itemDynamic!.sellingPrices.map((e) {
-              return PriceModelBasicWidget(
-                price: e,
+              return InkWell(
+                onLongPress: ((itemMap.length > 1) ||
+                        ((itemMap.length == 1 &&
+                            itemDynamic!.sellingPrices.length > 1)))
+                    ? () {
+                        onRemovePriceModel(itemDynamic!, e);
+                      }
+                    : null,
+                onDoubleTap: ((itemMap.length > 1) ||
+                        ((itemMap.length == 1 &&
+                            itemDynamic!.sellingPrices.length > 1)))
+                    ? () {
+                        onRemovePriceModel(itemDynamic!, e);
+                      }
+                    : null,
+                child: PriceModelBasicWidget(
+                  price: e,
+                ),
               );
             }),
           gap20,
@@ -301,6 +311,32 @@ class _UpdateItemPricesPageState extends State<UpdateItemPricesPage> {
         ],
       ).applySymmetricPadding().verticalScrollable(),
     );
+  }
+
+  Future onRemovePriceModel(ItemDynamic itemDyanmic, PriceModel e) async {
+    showYesNoAlertDialog(context,
+        yesBgColor: Colors.red,
+        noBgColor: Colors.blue.shade100,
+        yes: "हो",
+        no: "नाही",
+        yesTextColor: Colors.white,
+        noTextColor: Colors.black,
+        confirmMessage: "तुम्हाला हा भाव काढून टाकायचा आहे का?",
+        onYesClicked: () {
+      itemDynamic!.sellingPrices.removeWhere((t) => t == e);
+      itemMap[itemDynamic!.date.dateToUnder_Score_String()] = itemDynamic!;
+      if (itemDynamic!.sellingPrices.isEmpty) {
+        removeItemDynamicForDate(itemDynamic!);
+        itemMap.remove(itemDynamic!.date.dateToUnder_Score_String());
+        updateDateKeys();
+        if (datesKeys.isNotEmpty && itemMap.containsKey(datesKeys.last)) {
+          itemDynamic = itemMap[datesKeys.last];
+        }
+      } else {
+        updateDynamicItem(itemDynamic!);
+      }
+      setState(() {});
+    });
   }
 
   bool isUpdateDataHasMinimalData() {

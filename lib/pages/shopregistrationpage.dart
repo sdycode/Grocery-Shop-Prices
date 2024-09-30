@@ -1,9 +1,14 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:io';
 
 import 'package:groceryshopprices/lib.dart';
 
 class ShopRegistrationPage extends StatefulWidget {
-  const ShopRegistrationPage({super.key});
+  final ShopModel? shop;
+  const ShopRegistrationPage({
+    Key? key,
+    this.shop,
+  }) : super(key: key);
 
   @override
   State<ShopRegistrationPage> createState() => _ShopRegistrationPageState();
@@ -14,13 +19,23 @@ class _ShopRegistrationPageState extends State<ShopRegistrationPage> {
   TextEditingController nameC = TextEditingController();
   TextEditingController cityC = TextEditingController();
   TextEditingController descrC = TextEditingController();
-
+  ShopModel? shop;
   List<File> images = [];
   bool showLoading = false;
   @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
+  }
+
+  updateFieldsForExistingShop() {
+    if (shop != null) {
+      if (nameC.text.isNotEmpty) {
+        shop!.name = nameC.text.trim();
+        shop!.description = descrC.text.trim();
+        shop!.city = cityC.text.trim();
+      }
+    }
   }
 
   setupShopModel() async {
@@ -42,8 +57,25 @@ class _ShopRegistrationPageState extends State<ShopRegistrationPage> {
 
   bool loadingForImg = false;
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    shop = widget.shop;
+    if (shop != null) {
+      nameC.text = shop!.name;
+      descrC.text = shop!.description;
+      cityC.text = shop!.city;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    setupShopModel();
+    if (shop == null) {
+      setupShopModel();
+    } else {
+      updateFieldsForExistingShop();
+    }
+    printLog("ee ${shop != null} ${shop!.images.isNotEmpty} }");
     return Scaffold(
       appBar: appBarWidget(context: context, text: "Register Shop"),
       body: Column(
@@ -71,20 +103,32 @@ class _ShopRegistrationPageState extends State<ShopRegistrationPage> {
                         },
                       );
                     },
-                    child: MultiSourceImageWidget(
-                      defaultImgPath: "assets/appicon.png",
-                      img: images.isNotEmpty ? images.first.path : "",
-                      filePath: true,
-                      size: w * 0.4,
-                      roundRad: 20,
-                      fit: BoxFit.contain,
-                    ),
+                    child: ((shop != null && shop!.images.isNotEmpty) &&
+                            images.isEmpty)
+                        ? CachedImageWidget(
+                            image: shop!.images.first,
+                            width: w * 0.4,
+                            height: w * 0.4,
+                            radius: 20,
+                            fit: BoxFit.cover,
+                          )
+                        : MultiSourceImageWidget(
+                            defaultImgPath: "assets/appicon.png",
+                            img: images.isNotEmpty ? images.first.path : "",
+                            filePath: true,
+                            size: w * 0.4,
+                            roundRad: 20,
+                            fit: BoxFit.cover,
+                          ),
                   );
           }),
           gap10,
           lableAboveTextField("Shop Name*").alignLeft(),
           TextFieldBoxWidget(
             onChanged: (value) {
+              setState(() {});
+            },
+            onCleared: () {
               setState(() {});
             },
             normalBorderColor: transperent,
@@ -95,6 +139,9 @@ class _ShopRegistrationPageState extends State<ShopRegistrationPage> {
           lableAboveTextField("City").alignLeft(),
           TextFieldBoxWidget(
             onChanged: (value) {
+              setState(() {});
+            },
+            onCleared: () {
               setState(() {});
             },
             normalBorderColor: transperent,
@@ -110,10 +157,31 @@ class _ShopRegistrationPageState extends State<ShopRegistrationPage> {
             onChanged: (value) {
               setState(() {});
             },
+            onCleared: () {
+              setState(() {});
+            },
             hint: "Enter Description",
           ),
-          "Register Shop".elButnStyle(
+          (shop != null ? "Update" : "Register Shop").elButnStyle(
               onTap: () async {
+                if (shop != null) {
+                  if (await noInternetAvailable()) {
+                    showNoInternetDialog(context);
+                  }
+
+                  String link = "";
+                  if (images.isNotEmpty) {
+                    link = await uploadDocument(images.first,
+                        subpath: shopModel!.id);
+                  }
+                  if (link.isNotEmpty) {
+                    shop!.images.insert(0, link);
+                  }
+                  await addShop(shop!);
+                  triggerSnackbar("Shop details updated");
+
+                  return;
+                }
                 if (shopModel != null) {
                   setState(() {
                     showLoading = true;
@@ -132,7 +200,6 @@ class _ShopRegistrationPageState extends State<ShopRegistrationPage> {
                       id: id,
                       images: imageLinks,
                     );
-
                     printLog("id ${id}");
                     await addShop(shopModel!);
                   }
@@ -144,7 +211,9 @@ class _ShopRegistrationPageState extends State<ShopRegistrationPage> {
                 }
               },
               loading: showLoading,
-              ignore: shopModel == null || showLoading)
+              ignore: shop != null
+                  ? (nameC.text.isEmpty)
+                  : shopModel == null || showLoading)
         ],
       ).verticalScrollable().applySymmetricPadding(),
     );

@@ -3,6 +3,8 @@
 
 
 export 'addnewitempage.dart';
+export 'editshopinfopage.dart';
+export 'full_page_item_details.dart';
 export 'homepage.dart';
 export 'shopdetailspage.dart';
 export 'shoplistpage.dart';
